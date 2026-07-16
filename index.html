@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>✨ KHẢO BÀI TỪ VỰNG ✨</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:linear-gradient(135deg,#ffe6f0,#e0f7fa);
+  margin:0;padding:0;
+}
+
+.container{
+  max-width:900px;
+  margin:30px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h1{
+  text-align:center;
+  color:#ff4da6;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:15px;
+}
+
+#username{
+  padding:10px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  width:60%;
+  text-align:center;
+}
+
+#timer{
+  text-align:center;
+  font-size:18px;
+  margin:10px;
+}
+
+.question{
+  background:#f9f9f9;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:12px;
+}
+
+.unanswered{
+  border:2px solid red;
+  background:#fff0f0;
+}
+
+.answers label{
+  display:block;
+  margin:5px 0;
+  cursor:pointer;
+}
+
+button{
+  display:block;
+  margin:20px auto;
+  padding:12px 25px;
+  border:none;
+  border-radius:25px;
+  background:#ff4da6;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+
+#result{
+  margin-top:20px;
+}
+
+#leaderboard{
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body oncontextmenu="return false;">
+
+<div class="container">
+
+<h1>✨ KHẢO BÀI TỪ VỰNG TOEIC ✨</h1>
+
+<div class="header">
+<input id="username" placeholder="Nhập tên của bạn...">
+</div>
+
+<div id="timer">⏳ 15:00</div>
+
+<div id="quiz"></div>
+
+<button onclick="submitQuiz()">Nộp bài</button>
+
+<div id="result"></div>
+
+<h3>🏆 Bảng xếp hạng</h3>
+<div id="leaderboard"></div>
+
+</div>
+
+<script>
+let tabSwitchCount = 0; 
+
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    tabSwitchCount++;
+
+    alert("⚠️ Bạn đã rời tab (" + tabSwitchCount + " lần)");
+
+    if(tabSwitchCount >= 3){
+      alert("❌ Bạn rời tab quá nhiều!");
+      submitQuiz();
+    }
+  }
+});
+
+// 🔀 random
+function shuffle(arr){
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+// 📚 DATA
+let originalQuestions = [ 
+{
+  q: "The phrase <b>be piled up</b> most nearly means ______.",
+  a: ["được trưng bày để bán", "được chất đống", "được phân loại vào các hộp", "được bày ra"],
+  c: 1
+},
+{
+  q: "The phrase <b>be stocked with items</b> most nearly means ______.",
+  a: ["được chất đầy hàng hóa", "được chất đầy sản phẩm", "được trưng bày trên giá", "được gắn lên tường"],
+  c: 1
+},
+{
+  q: "The phrase <b>browse the shelves</b> most nearly means ______.",
+  a: ["xem các kệ hàng", "nhìn vào cửa hàng", "nhìn vào ngăn kéo", "với tay vào tủ"],
+  c: 0
+},
+{
+  q: "The phrase <b>lead up to</b> most nearly means ______.",
+  a: ["đi dạo dọc bãi biển", "dẫn lên, dẫn tới", "buộc thuyền", "lên phương tiện"],
+  c: 1
+},
+{
+  q: "The phrase <b>deliver the speech</b> most nearly means ______.",
+  a: ["tiến hành cuộc trò chuyện", "tham dự hội nghị", "phát biểu", "ghi món khách gọi"],
+  c: 2
+},
+{
+  q: "The phrase <b>type on the keyboard</b> most nearly means ______.",
+  a: ["hướng thẳng vào màn hình", "gõ trên bàn phím", "di chuyển đồ nội thất", "mang chậu cây"],
+  c: 1
+},
+{
+  q: "The phrase <b>try on a dress</b> most nearly means ______.",
+  a: ["mặc áo khoác", "thử váy", "cởi áo khoác", "đi dọc đường"],
+  c: 1
+},
+{
+  q: "The phrase <b>meet a deadline</b> most nearly means ______.",
+  a: ["hoàn thành dự án", "đạt thỏa thuận", "lên lịch họp", "kịp hạn chót"],
+  c: 3
+},
+{
+  q: "The phrase <b>proofread a proposal</b> most nearly means ______.",
+  a: ["rà soát bản đề xuất", "xác nhận đặt chỗ", "đặt phòng khách sạn", "đặt lịch hẹn"],
+  c: 0
+},
+{
+  q: "The phrase <b>out of order</b> most nearly means ______.",
+  a: ["hết hàng", "bị trì hoãn", "bị hư", "hoạt động bình thường"],
+  c: 2
+},
+{
+  q: "The phrase <b>shake hands</b> most nearly means ______.",
+  a: ["đưa vật gì cho ai", "cúi người", "bắt tay", "tựa vào lan can"],
+  c: 2
+},
+{
+  q: "The phrase <b>study the menu</b> most nearly means ______.",
+  a: ["kiểm tra thiết bị", "xem thực đơn", "được đặt ở góc", "được gắn lên tường"],
+  c: 1
+},
+{
+  q: "The phrase <b>apply for a position</b> most nearly means ______.",
+  a: ["ứng tuyển vị trí", "nộp đơn vào công ty", "đủ trình độ", "đủ điều kiện"],
+  c: 0
+},
+{
+  q: "The phrase <b>job opening</b> most nearly means ______.",
+  a: ["mô tả công việc", "đánh giá hiệu suất", "vị trí tuyển dụng", "đánh giá năng lực"],
+  c: 2
+},
+{
+  q: "The phrase <b>get a pay raise</b> most nearly means ______.",
+  a: ["được tăng lương", "được thăng chức", "nộp đơn nghỉ việc", "nhận trợ cấp thôi việc"],
+  c: 0
+},
+{
+  q: "The phrase <b>paid vacation</b> most nearly means ______.",
+  a: ["nghỉ thai sản", "kỳ nghỉ có lương", "tiền tăng ca", "buổi đào tạo"],
+  c: 1
+},
+{
+  q: "The phrase <b>boarding pass</b> most nearly means ______.",
+  a: ["đồ dùng cá nhân", "khoang hành lý phía trên", "thẻ lên máy bay", "giờ địa phương"],
+  c: 2
+},
+{
+  q: "The phrase <b>traffic congestion</b> most nearly means ______.",
+  a: ["cất cánh", "hạ cánh", "ùn tắc giao thông", "bị trì hoãn"],
+  c: 2
+},
+{
+  q: "The phrase <b>checkout counter</b> most nearly means ______.",
+  a: ["quầy thanh toán", "buổi ký tặng", "chụp ảnh", "in tài liệu"],
+  c: 0
+},
+{
+  q: "The phrase <b>put in a service request</b> most nearly means ______.",
+  a: ["kiểm kê hàng hóa", "gửi yêu cầu sửa chữa", "hoạt động bình thường", "hết giấy"],
+  c: 1
+},
+{
+  q: "The phrase <b>give me a call</b> most nearly means ______.",
+  a: ["liên lạc lại với tôi", "giữ máy", "gọi cho tôi", "để lại lời nhắn"],
+  c: 2
+},
+{
+  q: "The phrase <b>press the pound key</b> most nearly means ______.",
+  a: ["khi nào bạn thuận tiện", "nhấn phím #", "xác nhận đặt chỗ", "đặt lịch hẹn"],
+  c: 1
+},
+{
+  q: "The phrase <b>bend over</b> most nearly means ______.",
+  a: ["đưa vật gì cho ai", "tựa vào lan can", "cúi người", "tựa vào tường"],
+  c: 2
+},
+{
+  q: "The phrase <b>be attached to the wall</b> most nearly means ______.",
+  a: ["được đặt ở góc", "được gắn lên tường", "được trưng bày trên giá", "được bày ra"],
+  c: 1
+},
+{
+  q: "The phrase <b>performance evaluation</b> most nearly means ______.",
+  a: ["đánh giá hiệu suất", "đánh giá năng lực", "mô tả công việc", "vị trí tuyển dụng"],
+  c: 1
+},
+{
+  q: "The phrase <b>offer a position</b> most nearly means ______.",
+  a: ["được tăng lương", "mời nhận việc", "được thăng chức", "nộp đơn nghỉ việc"],
+  c: 1
+},
+{
+  q: "The phrase <b>cover letter</b> most nearly means ______.",
+  a: ["sơ yếu lý lịch", "thư xin việc", "buổi đào tạo", "trợ cấp thôi việc"],
+  c: 1
+},
+{
+  q: "The phrase <b>fasten your seatbelt</b> most nearly means ______.",
+  a: ["tiếp tục ngồi yên", "giờ địa phương", "thắt dây an toàn", "đồ dùng cá nhân"],
+  c: 2
+},
+{
+  q: "The phrase <b>complimentary drinks / meals</b> most nearly means ______.",
+  a: ["mong được gặp lại quý khách", "đồ uống / bữa ăn miễn phí", "di chuyển đến cổng số 5", "quầy thanh toán"],
+  c: 1
+},
+{
+  q: "The phrase <b>run out of paper</b> most nearly means ______.",
+  a: ["in tài liệu", "kẹt giấy", "hoạt động bình thường", "hết giấy"],
+  c: 3
+},
+{
+  q: "The supermarket shelves are completely ______ with snacks because a new shipment arrived this morning.",
+  a: ["loaded with cargo", "stocked with items", "laid out", "sorted into boxes"],
+  c: 1
+},
+{
+  q: "Before the products are sent to different stores, they must first ______ by size and color.",
+  a: ["be piled up", "be sorted into boxes", "be displayed for sale", "be on display on the rack"],
+  c: 1
+},
+{
+  q: "The manager asked the staff to ______ all the new products near the entrance before the store opened.",
+  a: ["browse the shelves", "lay out", "reach into the cabinet", "look into the drawer"],
+  c: 1
+},
+{
+  q: "The cargo ship was ______ before leaving the harbor.",
+  a: ["tied up at the dock", "loaded with cargo", "stocked with items", "displayed for sale"],
+  c: 1
+},
+{
+  q: "The customer ______ and took out a notebook.",
+  a: ["looked into the store", "reached into the cabinet", "walked along the street", "boarded a vehicle"],
+  c: 1
+},
+{
+  q: "Before signing the contract, the lawyer asked both companies to ______.",
+  a: ["conduct a conversation", "schedule a meeting", "reach an agreement", "deliver the speech"],
+  c: 2
+},
+{
+  q: "The CEO will ______ at tomorrow's international business forum.",
+  a: ["attend the conference", "deliver the speech", "take a food order", "make an appointment"],
+  c: 1
+},
+{
+  q: "The hotel receptionist politely asked the guest to ______ if further assistance was needed.",
+  a: ["stay on the line", "leave a message", "give her a call", "press the pound key"],
+  c: 2
+},
+{
+  q: "The receptionist couldn't connect your call, so please ______ after the beep.",
+  a: ["get back to me", "stay on the line", "leave a message", "give two weeks' notice"],
+  c: 2
+},
+{
+  q: "The automated phone system asked callers to ______ to continue in English.",
+  a: ["get back to me", "stay on the line", "press the pound key", "put in a service request"],
+  c: 2
+},
+{
+  q: "The customer stood outside and ______ through the window to see whether the shop was open.",
+  a: ["looked into the drawer", "looked into the store", "browsed the shelves", "reached into the cabinet"],
+  c: 1
+},
+{
+  q: "The fisherman carefully ______ before walking away from the dock.",
+  a: ["boarded a vehicle", "tied up the boat", "carried potted plants", "walked along the street"],
+  c: 1
+},
+{
+  q: "Please ______ while entering your password so the camera can recognize your face.",
+  a: ["type on the keyboard", "face the screen directly", "remain seated", "lean against the wall"],
+  c: 1
+},
+{
+  q: "The movers spent the entire afternoon ______ into the new office.",
+  a: ["carrying potted plants", "boarding a vehicle", "moving furniture", "taking inventory"],
+  c: 2
+},
+{
+  q: "The gardener carefully ______ into the hotel lobby to decorate the reception area.",
+  a: ["carried potted plants", "took off a jacket", "studied the menu", "shook hands"],
+  c: 0
+},
+{
+  q: "After coming inside because of the rain, everyone ______ before sitting down.",
+  a: ["put on a jacket", "took off a jacket", "tried on a dress", "fastened a seatbelt"],
+  c: 1
+},
+{
+  q: "Many tourists enjoy ______ in the evening while watching the sunset.",
+  a: ["walking along the street", "strolling on the beach", "boarding a vehicle", "shaking hands"],
+  c: 1
+},
+{
+  q: "The technician was asked to ______ carefully before restarting the production line.",
+  a: ["inspect a machine", "examine the equipment", "print a document", "take inventory"],
+  c: 1
+},
+{
+  q: "The receptionist smiled and ______.",
+  a: ["bent over", "leaned on a railing", "handed the room key to the guest", "carried potted plants"],
+  c: 2
+},
+{
+  q: "During the sightseeing tour, everyone stopped to ______ the famous statue.",
+  a: ["attend a signing event", "take a picture of", "print a document", "work properly"],
+  c: 1
+}
+];
+
+
+// 🔀 RANDOM CÂU + ĐÁP ÁN
+let questions = shuffle(originalQuestions.map(q=>{
+  let opts = q.a.map((t,i)=>({t,correct:i===q.c}));
+  opts = shuffle(opts);
+  return {
+    q:q.q,
+    a:opts.map(o=>o.t),
+    c:opts.findIndex(o=>o.correct)
+  };
+}));
+
+// render
+const quizDiv=document.getElementById("quiz");
+
+questions.forEach((q,i)=>{
+  let div=document.createElement("div");
+  div.className="question";
+
+  let html=`${i+1}. ${q.q}`;
+
+  q.a.forEach((ans,idx)=>{
+    html+=`
+    <div class="answers">
+      <label>
+        <input type="radio" name="q${i}" value="${idx}">
+        ${String.fromCharCode(65+idx)}. ${ans}
+      </label>
+    </div>`;
+  });
+
+  div.innerHTML=html;
+  quizDiv.appendChild(div);
+});
+
+// ⏱ timer
+let time=1200;
+let timer=setInterval(()=>{
+  let m=Math.floor(time/60);
+  let s=time%60;
+  document.getElementById("timer").innerText=`⏳ ${m}:${s<10?"0"+s:s}`;
+  time--;
+  if(time<0){clearInterval(timer);submitQuiz();}
+},1000);
+
+// submit
+function submitQuiz(){
+  let name=document.getElementById("username").value.trim();
+  if(!name){alert("Nhập tên!");return;}
+let hasEmpty = false;
+
+// kiểm tra câu chưa làm
+questions.forEach((q,i)=>{
+  let selected=document.querySelector(`input[name=q${i}]:checked`);
+  let div=document.getElementsByClassName("question")[i];
+
+  div.classList.remove("unanswered");
+
+  if(!selected){
+    div.classList.add("unanswered");
+    hasEmpty = true;
+  }
+});
+
+if(hasEmpty){
+  alert("❌ Bạn phải làm hết câu trước khi nộp!");
+  return;
+}
+  clearInterval(timer);
+
+  let score=0;
+  let wrongList=[];
+
+  questions.forEach((q,i)=>{
+    let selected=document.querySelector(`input[name=q${i}]:checked`);
+    if(!selected)return;
+
+    let val=parseInt(selected.value);
+
+    if(val===q.c){
+      score++;
+    } else {
+      wrongList.push({
+        question:q.q,
+        your:String.fromCharCode(65+val)+". "+q.a[val],
+        correct:String.fromCharCode(65+q.c)+". "+q.a[q.c]
+      });
+    }
+  });
+
+  // ⭐ TIME
+  let now = new Date().toLocaleString();
+
+  // hiển thị
+  let wrongRate = wrongList.length / questions.length;
+
+let resultHTML = `
+🎉 <b>${name}</b> đúng <b>${score}/${questions.length}</b><br>
+⏰ ${now}<br>
+⚠️ TabSwitch: ${tabSwitchCount || 0}<br><br>
+`;
+
+if(wrongRate < 0.3){
+
+    resultHTML += `
+    <h3>📚 Đáp án các câu sai</h3>
+    `;
+
+    wrongList.forEach((w,i)=>{
+        resultHTML += `
+        <div style="
+            border:1px solid #ddd;
+            padding:10px;
+            margin-bottom:10px;
+            border-radius:10px;
+            background:#fff8e6;
+        ">
+            <b>Câu ${i+1}</b><br>
+            ${w.question}<br><br>
+
+            ❌ Bạn chọn: <span style="color:red">${w.your}</span><br>
+            ✅ Đáp án: <span style="color:green">${w.correct}</span>
+        </div>
+        `;
+    });
+
+}else{
+
+    resultHTML += `
+    <div style="
+        background:#ffeaea;
+        padding:15px;
+        border-radius:12px;
+        color:#c00000;
+        font-weight:bold;
+    ">
+    ❌ Sai trên 30% mà đòi mấy đáp án của mẹ hả cưng?<br>
+    Học bài kỹ vô bữa sau mẹ khảo lại!
+    </div>
+    `;
+}
+
+document.getElementById("result").innerHTML = resultHTML;
+
+  // ⭐ GỬI DATA FULL
+  fetch("https://script.google.com/macros/s/AKfycbwKGHpjJy1RxNpGRIHdZtQiPfCrh0OSG24DEzQtRB7Ezlr1aki97aZL0JfQiSwkKmYmrg/exec",{
+    method:"POST",
+    body:JSON.stringify({
+      time: now,
+      name: name,
+      score: score,
+      total: questions.length,
+      tabSwitch: tabSwitchCount || 0,
+      wrong: wrongList.map((w,i)=>
+        (i+1)+". "+w.question+
+        " | Bạn chọn: "+w.your+
+        " | Đúng: "+w.correct
+      ).join("\n")
+    })
+  });
+}
+
+</script>
+
+</body>
+</html>
